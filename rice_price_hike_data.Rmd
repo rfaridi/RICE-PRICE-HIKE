@@ -1,0 +1,310 @@
+
+```{r setup, include=FALSE, echo=FALSE }
+library(knitr)
+opts_chunk$set(echo=FALSE, 
+	       message=FALSE, 
+	       warning=FALSE,
+	       comment=NA)
+```
+
+
+
+```{r ll  }
+library(tidyverse)
+library(tidyquant)
+```
+
+
+```{r rp  }
+load("./RDATA/rice_td3.RData")
+
+```
+
+# Rice price
+
+## Last five years
+
+```{r lf  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r lf2  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+
+
+
+## Yearly price trend
+
+```{r ypt  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+# International price
+
+```{r lip  }
+load("./RDATA/int_price_11_17.RData")
+load("./RDATA/int_price_fpmu_mo2.RData")
+```
+
+## Bangladesh Bank Source (Thai price)
+
+### Last five years
+
+```{r bbt3  }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon,y=rice2)) +
+	geom_line()
+```
+
+### last two years
+
+```{r bbt2  }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon,y=rice2)) +
+	geom_line()
+```
+
+### yearly trend
+
+```{r ypt7 }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=rice2)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+
+## Vietnam price
+
+### Last five years
+
+```{r bbt5  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2011) %>% 
+    ggplot(aes(x=time,y=vietnam.rice)) +
+	geom_line()
+```
+
+### last two years
+
+```{r bbt6  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2013) %>% 
+    ggplot(aes(x=time,y=vietnam.rice)) +
+	geom_line()
+
+```
+
+### yearly trend
+
+```{r ypt2  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2011) %>% 
+    mutate(mo=month(time),yr=year(time)) %>% 
+    ggplot(aes(x=mo,y=vietnam.rice)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+# Public stock of rice
+
+
+```{r psr  }
+load("./RDATA/rice_pub_cl_mo.RData")
+```
+
+
+
+## Last five years
+
+```{r ps50  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r ps3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+
+
+
+## Yearly trend
+
+```{r ypt3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+# Import data
+
+```{r pilf  }
+load("./RDATA/rice_yr_imp.RData")
+```
+
+## Total national import
+
+
+### Last five years
+
+```{r ps62  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=total.national.imp))+
+	geom_line(group="")
+```
+
+###  Last two years
+
+```{r ps4  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=total.national.imp))+
+	geom_line(group="")
+```
+
+
+## Total rice import
+
+
+### Last five years
+
+```{r ps7  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.national.imp))+
+	geom_line(group="")
+```
+
+###  Last two years
+
+```{r ps53  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.national.imp))+
+	geom_line(group="")
+```
+
+## Private rice import
+
+
+###  All the years
+
+```{r ps8  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.pri.imp))+
+	geom_line(group="") + 
+	theme(axis.text.x=element_text(angle=90))
+```
+
+###  Last five years
+
+```{r ps59  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.pri.imp))+
+	geom_line(group="")
+```
+
+## Public rice import
+
+
+###  All the years
+
+```{r ps1  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.tot.gob.imp))+
+	geom_line(group="") + 
+	theme(axis.text.x=element_text(angle=90))
+```
+
+###  Last five years
+
+```{r ps61  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.tot.gob.imp))+
+	geom_line(group="")
+```
+
+# Government procurement of rice
+
+```{r procl  }
+load("./RDATA/rice_proc_mo_td2.RData")
+rice.proc.mo.td2  <-  rice.proc.mo.td2 %>% 
+			    filter(!is.na(amount))
+```
+
+## Last five years
+
+```{r ps51  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r p77  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+
+
+
+## Yearly trend
+
+```{r ypt4  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+## Year-wise procurement upto August
+
+```{r ypty  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    group_by(year=year(yrmon)) %>% 
+    filter(month(yrmon) < 9) %>% 
+    summarize(total=sum(amount)) %>% 
+    ggplot(aes(x=year,y=total)) +
+	    geom_line() 
+```
+
+
