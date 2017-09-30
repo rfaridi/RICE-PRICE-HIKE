@@ -12,6 +12,7 @@ opts_chunk$set(echo=FALSE,
 ```{r ll  }
 library(tidyverse)
 library(tidyquant)
+library(pander)
 ```
 
 

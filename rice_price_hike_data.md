@@ -14,10 +14,42 @@
 
 ![plot of chunk lf](figure/lf-1.png)
 
+
+
+
 ## Last two years
 
 ![plot of chunk lf2](figure/lf2-1.png)
 
+
+## Top 10 prices
+
+In the below we see  top 10 prices in the last two decades in Bangladesh (wholesale coarse price). We find that out of this top 10 prices, 5 of those were registered in 2017. Two were recorded in 2016, October and November repectively. 
+
+
+-----------------
+ yrmon    amount 
+-------- --------
+May 2017   3838  
+
+Apr 2017   3597  
+
+Mar 2017   3381  
+
+Feb 2017   3298  
+
+Feb 2011   3272  
+
+Oct 2016   3265  
+
+Nov 2016   3244  
+
+Mar 2011   3209  
+
+Jan 2017   3207  
+
+Apr 2008   3170  
+-----------------
 
 
 
