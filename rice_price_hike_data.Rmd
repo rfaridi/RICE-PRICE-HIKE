@@ -31,6 +31,9 @@ rice.td3 %>%
 	geom_line()
 ```
 
+
+
+
 ## Last two years
 
 ```{r lf2  }
@@ -40,6 +43,18 @@ rice.td3 %>%
 	geom_line()
 ```
 
+
+## Top 10 prices
+
+In the below we see  top 10 prices in the last two decades in Bangladesh (wholesale coarse price). We find that out of this top 10 prices, 5 of those were registered in 2017. Two were recorded in 2016, October and November repectively. 
+
+```{r top10p  }
+rice.td3 %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
 
 
 
