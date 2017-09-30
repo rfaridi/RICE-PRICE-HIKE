@@ -49,6 +49,7 @@ rice.td3 %>%
 
 In the below we see  top 10 prices in the last two decades in Bangladesh (wholesale coarse price). We find that out of this top 10 prices, 5 of those were registered in 2017. Two were recorded in 2016, October and November repectively. 
 
+
 ```{r top10p  }
 rice.td3 %>% 
     arrange(desc(amount)) %>% 
@@ -57,6 +58,67 @@ rice.td3 %>%
     pander()
 ```
 
+let's put it into graph
+
+
+```{r top10pGr  }
+
+rice.td3 %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    mutate(yrmon=as.factor(yrmon)) %>% 
+    ggplot(aes(x=reorder(yrmon,amount),y=amount,fill=amount))+
+      geom_bar(stat="identity") +
+      coord_flip()
+```
+
+
+
+
+
+In the same manner we look into to 10 lowest prices in last two decades
+
+
+```{r top10low2  }
+rice.td3 %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the above see that, all were back in later half of 1990s
+
+let's try in the last 10 years
+
+```{r top10low10  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2007) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+
+We find that all were recorded back in 2009
+
+how about last 5 years
+
+```{r top10low05  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+
+in the above we see that in the last 5 years, 2nd lowest price was achived in May 2016. There is  2nd lowest price was achived in May 2016. There is two other prices from 2016. All others from 2012. 
+
+
+From the above analysis we see that, in 2016 we saw lowest domestic rice prices in last five years and also saw highest prices in last 5 years or 10 years. This fluctuation seems to be difficult to explain at this moment. 
 
 
 ## Yearly price trend
@@ -97,6 +159,7 @@ int.price.11.17 %>%
 	geom_line()
 ```
 
+
 ### yearly trend
 
 ```{r ypt7 }
@@ -129,6 +192,69 @@ int.price.fpmu.mo2 %>%
 	geom_line()
 
 ```
+
+
+### Top 10 prices
+
+In the below we see  top 10 prices since 2009 in vietnam price. We find that out of this top 10 prices, almost all of those were recorded in 2011. 
+
+
+```{r top10p2  }
+int.price.fpmu.mo2 %>% 
+    arrange(desc(vietnam.rice)) %>% 
+    slice(1:10) %>% 
+    select(time,vietnam.rice) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest prices since 2009
+
+
+```{r top10low  }
+int.price.fpmu.mo2 %>% 
+    arrange(vietnam.rice) %>% 
+    slice(1:10) %>% 
+    select(time,vietnam.rice) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+What we see is quite interesting. since 2009, the lowest prices were recorded in 2015, 2016 and 2017. As of April
+2017, we have the 10-th lowest price since 2009. 
+
+## Thai price
+
+### Top 10 prices
+
+In the below we see  top 10 prices since 2009 in vietnam price. We find that out of this top 10 prices, almost all of those were recorded in in the period between 2009 and 2011. 
+
+
+```{r top10pth  }
+int.price.fpmu.mo2 %>% 
+    arrange(desc(thai.rice1)) %>% 
+    slice(1:10) %>% 
+    select(time,thai.rice1) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest prices since 2009
+
+
+```{r top10lowth  }
+int.price.fpmu.mo2 %>% 
+    arrange(thai.rice1) %>% 
+    slice(1:10) %>% 
+    select(time,thai.rice1) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+What we see is quite interesting. since 2009, the lowest prices were recorded in 2015, 2016 and 2017. As of March 2017, we have the 9-th lowest price since 2009. 
+
+
+
 
 ### yearly trend
 
@@ -168,7 +294,42 @@ rice.pub.cl.mo %>%
 	geom_line()
 ```
 
+### Top 10 stock values
 
+In the below we 10 highest  public stock value of rice since 1990. We find that the latest highest was achieved in August 2015.
+
+```{r top10st }
+rice.pub.cl.mo %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest  stock values since 1990
+
+
+```{r top10lowst  }
+rice.pub.cl.mo %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the above we find that in the last 27 years, we did not experience any low stock values that could feature into to 10 lowest. Now let's look into last 10 years
+
+
+```{r top10lowst10  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2006) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+what we see that we have the lowest public stock in 2017, particularly in June in last 10 years. 
 
 
 ## Yearly trend
