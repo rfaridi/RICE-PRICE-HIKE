@@ -1,0 +1,873 @@
+# Housekeeping
+```{r setup, include=FALSE, echo=FALSE }
+library(knitr)
+opts_chunk$set(echo=FALSE, 
+	       message=FALSE, 
+	       warning=FALSE,
+	       comment=NA)
+```
+
+
+
+```{r ll  }
+library(tidyquant)
+library(pander)
+```
+
+
+# Domestic prices
+
+
+```{r rp  }
+load("./RDATA/rice_td3.RData")
+
+```
+
+
+## Last five years
+
+```{r lf  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r lf2  }
+rice.td3.sm <- rice.td3[seq(1,dim(rice.td3)[1],2),]
+rice.td3 %>% 
+    filter(year(yrmon) > 2015) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line() +
+	geom_text( aes(label=yrmon),size=3)
+```
+
+
+## 2017
+
+```{r lf2  }
+rice.td3 %>% 
+    filter(year(yrmon) ==2017) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+
+## Top 10 prices
+
+In the below we see  top 10 prices in the last two decades in Bangladesh (wholesale coarse price). We find that out of this top 10 prices, 5 of those were registered in 2017. Two were recorded in 2016, October and November respectively. 
+
+
+```{r top10p  }
+rice.td3 %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+let's put it into graph
+
+
+```{r top10pGr  }
+
+rice.td3 %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    mutate(yrmon=as.factor(yrmon)) %>% 
+    ggplot(aes(x=reorder(yrmon,amount),y=amount,fill=amount))+
+      geom_bar(stat="identity") +
+      coord_flip()
+```
+
+In the same manner we look into to 10 lowest prices in last two decades
+
+
+```{r top10low2  }
+rice.td3 %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the above see that, all were back in later half of 1990s
+
+let's try in the last 10 years
+
+```{r top10low10  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2007) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+
+We find that all were recorded back in 2009
+
+how about last 5 years
+
+```{r top10low05  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+
+in the above we see that in the last 5 years, 2nd lowest price was archived in May 2016. There is  2nd lowest price was archived in May 2016. There is two other prices from 2016. All others from 2012. 
+
+
+From the above analysis we see that, in 2016 we saw lowest domestic rice prices in last five years and also saw highest prices in last 5 years or 10 years. This fluctuation seems to be difficult to explain at this moment. 
+
+
+## Yearly price trend
+
+```{r ypt  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+## Form yearly data
+even before that, lets convert those to yearly prices
+
+```{r ry  }
+rice.yr <- rice.td3 %>% 
+	    tq_transmute(select=amount,
+			 mutate_fun=apply.yearly,
+			 FUN=median) 
+```
+
+Now time to plot the data
+
+```{r yrp}
+rice.yr %>% 
+    ggplot(aes(x=yrmon,y=amount))+ 
+    geom_line()
+```
+
+Seems like high frequency changes but I would like to find yearly changes
+
+now very simply we could just do this
+
+```{r delt  }
+Delt(rice.yr$amount)
+```
+
+But if we want to have it in tidy format
+
+```{r deltTD  }
+rice.yr.d <- rice.yr %>% 
+    tq_transmute(select=amount,
+		 mutate_fun=Delt,
+		 col_rename="amount") %>% 
+                 filter(!is.na(amount))
+```
+
+Now let's plot these changes
+
+```{r deltplot  }
+rice.yr.d %>% 
+	ggplot(aes(x=yrmon, y=amount,fill=amount)) +
+	    geom_bar(stat="identity")
+```
+
+doesn't seem to have much insight, aman price, for the last few years have been , falling, let's zoom in last couple of years. Update: its not aman price, its the course rice
+
+```{r lstc  }
+rice.td3 %>% 
+    filter(year(yrmon) > 2011) %>%
+    ggplot(aes(x=month(yrmon), y=amount,color=as.factor(year(yrmon))))+
+	   geom_line() +
+	   facet_wrap(~as.factor(year(yrmon))) +
+	   theme_tq()
+
+```
+
+It seems that from May, 2016 price has been steadily rising. 
+
+
+Now let's check whether there is any other data source on other rice category
+
+Let's have a quick graph of all the variables
+
+```{r allvars  }
+load("./RDATA/foodgrain_bd.RData")
+foodgrain.bd %>% 
+    gather(vars,value, -FY) %>% 
+    ggplot(aes(x=FY,y=value)) +
+	   geom_line(group="") +
+	   facet_wrap(~vars, ncol=3,scale="free_y")
+```
+
+
+# International prices
+
+## FPMU data
+
+### Load data
+Time to load the data
+
+```{r inpfp  }
+load("~/Dropbox/miscStuff/DATA_REPOSITORY/RDATA/FPMU/int_price_fpmu_mo2.RData")
+```
+
+### All prices
+Now time to plot all the prices
+```{r dd}
+int.price.fpmu.mo2 %>% 
+      gather(series,price,-time) %>% 
+      ggplot(aes(x=time,y=price)) +
+      geom_line() +
+      facet_wrap(~series)
+```
+
+
+### Prices since 2013
+In the above, we find that almost all the prices are falling
+
+now to have more confirmation let's zoom in last few years
+
+```{r inpfpl  }
+int.price.fpmu.mo2 %>% 
+      filter(year(time) > 2013) %>% 
+      select(time, thai.rice1,us.rice1,vietnam.rice) %>% 
+      gather(series,price,-time) %>% 
+      ggplot(aes(x=time,y=price)) +
+      geom_line() +
+      facet_wrap(~series, ncol=1)
+
+```
+
+## BB data
+
+```{r lip  }
+load("./RDATA/int_price_11_17.RData")
+```
+
+
+### Thai price
+
+#### Last five years
+
+```{r bbt3  }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon,y=rice2)) +
+	geom_line()
+```
+
+#### last two years
+
+```{r bbt2  }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon,y=rice2)) +
+	geom_line()
+```
+
+
+#### yearly trend
+
+```{r ypt7 }
+int.price.11.17 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=rice2)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+#### Top 10 prices
+
+In the below we see  top 10 prices since 2009 in vietnam price. We find that out of this top 10 prices, almost all of those were recorded in in the period between 2009 and 2011. 
+
+
+```{r top10pth  }
+int.price.fpmu.mo2 %>% 
+    arrange(desc(thai.rice1)) %>% 
+    slice(1:10) %>% 
+    select(time,thai.rice1) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest prices since 2009
+
+
+```{r top10lowth  }
+int.price.fpmu.mo2 %>% 
+    arrange(thai.rice1) %>% 
+    slice(1:10) %>% 
+    select(time,thai.rice1) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+What we see is quite interesting. since 2009, the lowest prices were recorded in 2015, 2016 and 2017. As of March 2017, we have the 9-th lowest price since 2009. 
+
+#### yearly trend
+
+```{r ypt2  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2011) %>% 
+    mutate(mo=month(time),yr=year(time)) %>% 
+    ggplot(aes(x=mo,y=vietnam.rice)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+### Vietnam price
+
+#### Last five years
+
+```{r bbt5  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2011) %>% 
+    ggplot(aes(x=time,y=vietnam.rice)) +
+	geom_line()
+```
+
+#### last two years
+
+```{r bbt6  }
+int.price.fpmu.mo2 %>% 
+    filter(year(time) > 2013) %>% 
+    ggplot(aes(x=time,y=vietnam.rice)) +
+	geom_line()
+
+```
+
+
+#### Top 10 prices
+
+In the below we see  top 10 prices since 2009 in vietnam price. We find that out of this top 10 prices, almost all of those were recorded in 2011. 
+
+
+```{r top10p2  }
+int.price.fpmu.mo2 %>% 
+    arrange(desc(vietnam.rice)) %>% 
+    slice(1:10) %>% 
+    select(time,vietnam.rice) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest prices since 2009
+
+#### Lowest 10 prices
+
+```{r top10low  }
+int.price.fpmu.mo2 %>% 
+    arrange(vietnam.rice) %>% 
+    slice(1:10) %>% 
+    select(time,vietnam.rice) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+What we see is quite interesting. since 2009, the lowest prices were recorded in 2015, 2016 and 2017. As of April
+2017, we have the 10-th lowest price since 2009. 
+
+# Rice production
+
+
+let's have an overall look at gross production
+
+```{r rprod  }
+foodgrain.bd %>% 
+    ggplot(aes(x=FY,y=rice.gross.prod)) +
+	geom_line(group="")
+```
+let's have a look at the last five year's situation
+
+
+```{r lf  }
+foodgrain.bd %>% 
+    slice(16:20) %>% 
+    ggplot(aes(x=FY,y=rice.gross.prod)) +
+	geom_line(group="")
+
+```
+
+# Rice Import
+
+ Import data
+
+```{r pilf  }
+load("./RDATA/rice_yr_imp.RData")
+```
+
+## Total national import
+
+
+### Last five years
+
+```{r ps62  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=total.national.imp))+
+	geom_line(group="")
+```
+
+###  Last two years
+
+```{r ps4  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=total.national.imp))+
+	geom_line(group="")
+```
+
+
+## Total rice import
+
+
+### Last five years
+
+```{r ps7  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.national.imp))+
+	geom_line(group="")
+```
+
+###  Last two years
+
+```{r ps53  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.national.imp))+
+	geom_line(group="")
+```
+
+## Private rice import
+
+
+###  All the years
+
+```{r ps8  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.pri.imp))+
+	geom_line(group="") + 
+	theme(axis.text.x=element_text(angle=90))
+```
+
+###  Last five years
+
+```{r ps59  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.pri.imp))+
+	geom_line(group="")
+```
+
+## Public rice import
+
+
+###  All the years
+
+```{r ps1  }
+rice.yr.imp %>% 
+    ggplot(aes(x=FY, y=rice.tot.gob.imp))+
+	geom_line(group="") + 
+	theme(axis.text.x=element_text(angle=90))
+```
+
+###  Last five years
+
+```{r ps61  }
+rice.yr.imp %>% 
+    filter(FY %in%  c("FY13","FY14","FY15","FY16","FY17"))  %>% 
+    ggplot(aes(x=FY, y=rice.tot.gob.imp))+
+	geom_line(group="")
+```
+
+How about private import?
+
+```{r pi  }
+foodgrain.bd %>% 
+    slice(16:20) %>% 
+    ggplot(aes(x=FY,y=rice.pri.imp)) +
+	geom_line(group="")
+
+```
+
+There is sharp decline in private import between FY15 and FY16
+
+
+Let's also have a look at procurement data
+
+
+```{r pd  }
+foodgrain.bd %>% 
+    slice(16:20) %>% 
+    ggplot(aes(x=FY,y=rice.procure)) +
+	geom_line(group="")
+
+
+```
+
+this also experienced sharp fall
+
+
+# Net availability
+
+now i want to calculate net availability of rice
+
+```{r netav  }
+#foodgrain.bd2  <- foodgrain.bd %>% 
+#	    mutate(rice.net.avail=rice.net.prod+rice.pri.imp-rice.pub.dist+rice.procure)
+```
+
+The above calculation did not match, sw we gave up the effort and included all the net availability of the information. now let's check what's happening
+
+```{r neta  }
+foodgrain.bd %>% 
+    slice(16:20) %>% 
+    ggplot(aes(x=FY,y=rice.net.dom.avail)) + 
+               geom_line(group="")
+```
+
+in the above we see that net rice availability is going down
+
+
+Now let's view the chart
+
+
+```{r pubstock  }
+load("./RDATA/rice_pub_cl_mo.RData")
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon,y=amount)) +
+	    geom_line()
+```
+
+Let's have a look at the yearly pattern
+
+
+```{r pubstock4  }
+rice.pub.cl.mo %>% 
+    mutate(mo=month(yrmon),
+	   yr=year(yrmon)) %>% 
+    filter(yr  > 2011) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+	    facet_wrap(~yr)
+```
+
+
+
+
+the above is quite zigzag, kind of random pattern, so let's smoothen it by converting to yearly
+
+```{r pssmooth  }
+rice.pub.yr <- rice.pub.cl.mo %>% 
+     tq_transmute(select=amount,
+		  period="years",		  
+		  mutate_fun=to.period,
+		  FUN=mean)
+```
+
+the above does not convert into yearly average, what it does is that it just picks out the last period
+
+so,i will have to bring in mean, which can be done by xts function, apply.monthly or there might be other variants 
+
+
+
+now let's plot it
+
+
+```{r smplot  }
+rice.pub.yr %>% 
+    ggplot(aes(x=year(yrmon),y=amount))+
+	    geom_line()
+```
+
+its too zig zagy
+
+let's try whether ma can smooth it further
+
+
+```{r mas  }
+rice.pub.yr %>% 
+    tq_transmute(select=amount,
+		 mutate_fun=SMA,
+		 n=3,
+		 col_rename="amount") %>% 
+    filter(!is.na(amount)) %>% 
+    ggplot(aes(x=year(yrmon),y=amount)) +
+	   geom_line()
+```
+
+
+the smoothening clearly shows that there is recent downward trend
+
+
+let's use the same mechanism in monthly date
+
+```{r mos  }
+rice.pub.ma <- rice.pub.cl.mo %>% 
+	    tq_transmute(select=amount,
+		 mutate_fun=SMA,
+		 n=3,
+		 col_rename="amount") %>% 
+		filter(!is.na(amount))
+```
+
+now let's smoothen it
+
+
+```{r mos2  }
+rice.pub.ma %>% 
+    ggplot(aes(x=yrmon,y=amount))+
+    geom_line()
+```
+
+Let's increase the windown
+
+
+
+```{r inw  }
+rice.pub.cl.mo %>% 
+	    tq_transmute(select=amount,
+		 mutate_fun=SMA,
+		 n=10,
+		 col_rename="amount") %>% 
+		filter(!is.na(amount)) %>% 
+		ggplot(aes(x=yrmon,y=amount))+
+		    geom_line()
+
+```
+
+okay, good, it smoothened quite a bit
+
+let's increase it even further
+
+```{r inw  }
+rice.pub.cl.mo %>% 
+	    tq_transmute(select=amount,
+		 mutate_fun=SMA,
+		 n=20,
+		 col_rename="amount") %>% 
+		filter(!is.na(amount)) %>% 
+		ggplot(aes(x=yrmon,y=amount))+
+		    geom_line() +
+		    geom_smooth(method="lm")
+
+```
+
+let's have a MA over the last three years
+
+
+```{r inw2  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2013) %>% 
+	    tq_transmute(select=amount,
+		 mutate_fun=SMA,
+		 n=3,
+		 col_rename="amount") %>% 
+		filter(!is.na(amount)) %>% 
+		ggplot(aes(x=yrmon,y=amount))+
+		    geom_line() +
+		    geom_smooth(method="lm")
+
+```
+
+so it clearly shows that there is a downward trend for last three years of public stock
+
+let's zoom into last five years
+
+
+```{r pubstock5  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon)>2011) %>% 
+    ggplot(aes(x=yrmon,y=amount)) +
+	    geom_line()
+```
+
+
+let's zoom further, how about last two years
+
+
+```{r pubstock2  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon)>2014) %>% 
+    ggplot(aes(x=yrmon,y=amount)) +
+	    geom_line()
+```
+
+how about three years?
+
+
+```{r pubstock3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon)>2013) %>% 
+    ggplot(aes(x=yrmon,y=amount)) +
+	    geom_line()
+```
+
+
+
+
+Lets' have a look at year-wise distribution
+
+
+```{r ps3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2012) %>% 
+    ggplot(aes(x=month(yrmon),y=amount))+
+    geom_line() +
+    facet_wrap(~year(yrmon))
+```
+
+
+
+Now time to plot some of the import data
+
+```{r imppl  }
+load("./RDATA/rice_yr_imp.RData")
+rice.yr.imp %>% 
+    gather(key,value,-FY) %>% 
+    ggplot(aes(x=FY,y=value,color=key)) +
+	   geom_line(group="") +
+	   facet_wrap(~key, ncol=3, scale="free_y")
+```
+
+
+# Public stock of rice
+
+
+```{r psr  }
+load("./RDATA/rice_pub_cl_mo.RData")
+```
+
+
+
+## Last five years
+
+```{r ps50  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r ps3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+### Top 10 stock values
+
+In the below we 10 highest  public stock value of rice since 1990. We find that the latest highest was achieved in August 2015.
+
+```{r top10st }
+rice.pub.cl.mo %>% 
+    arrange(desc(amount)) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the same manner we look into to 10 lowest  stock values since 1990
+
+
+```{r top10lowst  }
+rice.pub.cl.mo %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+In the above we find that in the last 27 years, we did not experience any low stock values that could feature into to 10 lowest. Now let's look into last 10 years
+
+
+```{r top10lowst10  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2006) %>% 
+    arrange(amount) %>% 
+    slice(1:10) %>% 
+    data.frame() %>% 
+    pander()
+```
+
+what we see that we have the lowest public stock in 2017, particularly in June in last 10 years. 
+
+
+## Yearly trend
+
+```{r ypt3  }
+rice.pub.cl.mo %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+# Government procurement of rice
+
+
+## Rice Procurement
+```{r procl  }
+load("./RDATA/rice_proc_mo_td2.RData")
+rice.proc.mo.td2  <-  rice.proc.mo.td2 %>% 
+			    filter(!is.na(amount))
+```
+
+## Last five years
+
+```{r ps51  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+## Last two years
+
+```{r p77  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2013) %>% 
+    ggplot(aes(x=yrmon, y=amount))+
+	geom_line()
+```
+
+
+## Yearly trend
+
+```{r ypt4  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    mutate(mo=month(yrmon),yr=year(yrmon)) %>% 
+    ggplot(aes(x=mo,y=amount)) +
+	    geom_line() +
+		facet_wrap(~yr, ncol=2)
+```
+
+## Year-wise procurement upto August
+
+```{r ypty  }
+rice.proc.mo.td2 %>% 
+    filter(year(yrmon) > 2011) %>% 
+    group_by(year=year(yrmon)) %>% 
+    filter(month(yrmon) < 9) %>% 
+    summarize(total=sum(amount)) %>% 
+    ggplot(aes(x=year,y=total)) +
+	    geom_line() 
+```
+
